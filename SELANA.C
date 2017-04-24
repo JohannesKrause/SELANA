@@ -3,6 +3,11 @@
 #include "ATOOLS/Org/Data_Reader.H"
 #include <algorithm>
 
+/*compile with:
+  SHERPA_PREFIX=/home/s0118321/software/Sherpa/rel-2-2-2
+  g++ -shared -g -I`$SHERPA_PREFIX/bin/Sherpa-config --incdir`  `$SHERPA_PREFIX/bin/Sherpa-config --ldflags`  -fPIC -o libSELANA.so SELANA.C
+ */
+
 namespace SELAN{
 
 
