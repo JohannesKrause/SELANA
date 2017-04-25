@@ -26,6 +26,14 @@ namespace SELAN{
     return 0;
   }
 
+  class Order_ppt{
+  public:
+    int operator()(const ATOOLS::Particle *a, const ATOOLS::Particle *b);
+  };
+  int Order_ppt::operator()(const ATOOLS::Particle * a, const ATOOLS::Particle *b){
+    if (a->Momentum().PPerp() > b->Momentum().PPerp()) return 1;
+    return 0;
+  }
 
 
   class SELANA: public SHERPA::Analysis_Interface {
@@ -158,17 +166,26 @@ namespace SELAN{
                   leadingphoton = particle;
                 }
             }
-          //get vector of leptons
-          if(particle->Flav().IsLepton() && particle->Flav().Charge()!=0 && particle->Momentum().PPerp()>5){
+          //get vector of all leptons 
+          if(particle->Flav().IsLepton() && particle->Flav().Charge()!=0 ){
               leptonen.push_back(particle);
             }
+
           //get vector of partonen
           if(particle->Flav().IsQuark() || particle->Flav().IsGluon() || particle->Flav().IsHadron()){
               partonen.push_back(particle);
             }
         }
-
-      msg_Debugging()<< METHOD << "() { leading photon: " << *leadingphoton << "}" << std::endl;
+       //keep the two leptons with highest pT
+       std::stable_sort(leptonen.begin(), leptonen.end(), Order_ppt());
+       leptonen.resize(2);
+              
+       msg_Debugging() <<  METHOD << "()" <<  "   NEW EVENT   \n" << 
+                   "leading photon:  "  <<  *leadingphoton  << "\n" <<
+                   "leading lepton: "   << *leptonen[0] << "\n" <<
+                   "subleading lepton: "   << *leptonen[1] << "\n" <<  std::endl;   
+        
+       
       if (leadingphoton){
           bool lep_cut = LeptonCut(*leadingphoton, leptonen);
           bool gamma_cut = PhotonPtCut(*leadingphoton);
