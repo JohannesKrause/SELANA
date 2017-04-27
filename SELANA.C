@@ -26,16 +26,6 @@ namespace SELAN{
     return 0;
   }
 
-  class Order_ppt{
-  public:
-    int operator()(const ATOOLS::Particle *a, const ATOOLS::Particle *b);
-  };
-  int Order_ppt::operator()(const ATOOLS::Particle * a, const ATOOLS::Particle *b){
-    if (a->Momentum().PPerp() > b->Momentum().PPerp()) return 1;
-    return 0;
-  }
-
-
   class SELANA: public SHERPA::Analysis_Interface {
 
   protected:
@@ -166,24 +156,21 @@ namespace SELAN{
                   leadingphoton = particle;
                 }
             }
-          //get vector of all leptons 
-          if(particle->Flav().IsLepton() && particle->Flav().Charge()!=0 ){
+          //get vector of all leptons, which come not from hadron decays
+          if(particle->Flav().IsLepton() && particle->Flav().Charge()!=0 &&
+                                            particle->ProductionBlob()->Type()==ATOOLS::btp::QED_Radiation){
               leptonen.push_back(particle);
             }
 
-          //get vector of partonen
+          //get vector of partonen or hadrons
           if(particle->Flav().IsQuark() || particle->Flav().IsGluon() || particle->Flav().IsHadron()){
               partonen.push_back(particle);
             }
         }
-       //keep the two leptons with highest pT
-       std::stable_sort(leptonen.begin(), leptonen.end(), Order_ppt());
-       leptonen.resize(2);
-              
        msg_Debugging() <<  METHOD << "()" <<  "   NEW EVENT   \n" << 
                    "leading photon:  "  <<  *leadingphoton  << "\n" <<
-                   "leading lepton: "   << *leptonen[0] << "\n" <<
-                   "subleading lepton: "   << *leptonen[1] << "\n" <<  std::endl;   
+                   "lepton1: "   << *leptonen[0] << "\n" <<
+                   "lepton2: "   << *leptonen[1] << "\n" <<  std::endl;
         
        
       if (leadingphoton){
