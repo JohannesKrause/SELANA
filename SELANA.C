@@ -158,9 +158,9 @@ namespace SELAN{
       ATOOLS::Particle *leadingphoton;
       double gpt=0;
       for (ATOOLS::Particle_List::const_iterator it=particles.begin(); it!=particles.end(); it++){
-          //get photon with highest pT
+          //get photon with highest pT, which comes either from ME or from YFS, but not from hadrons
           ATOOLS::Particle *particle=*it;
-          if (particle->Flav().IsPhoton()){
+          if (particle->Flav().IsPhoton() && particle->ProductionBlob()->Type()==ATOOLS::btp::QED_Radiation){
               if (particle->Momentum().PPerp()>gpt){
                   gpt = particle->Momentum().PPerp();
                   leadingphoton = particle;
