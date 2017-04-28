@@ -56,15 +56,15 @@ namespace SELAN{
       return (photon.Momentum().PPerp() > m_pt);
     }
 
-    bool Chi(const double & egamma, const double & etot, const double &dr){
-      double e_chi = egamma*m_eps*std::pow((1.-std::cos(dr))/(1.-std::cos(m_dr)),m_n);
-      if (etot > e_chi) return false;
+    bool Chi(const double & egammat, const double & etot, const double &dr){
+      double e_chi = egammat*m_eps*std::pow((1.-std::cos(dr))/(1.-std::cos(m_dr)),m_n);
+      if (etot-egammat > e_chi) return false;
     return true;
     }
 
     bool IsoCut(const ATOOLS::Particle &photon, const ATOOLS::Particle_Vector &partonen){
       /*ME condition: etot < e_chi for every radius in the cone */
-      const double egamma = photon.Momentum().PPerp();
+      const double egammat = photon.Momentum().PPerp();
       std::vector<edr> edrlist;
       for (size_t i=0; i<partonen.size(); i++) {
           ATOOLS::Particle *parton(partonen.at(i));
@@ -76,7 +76,7 @@ namespace SELAN{
          double etot=0;
          for (size_t i=0; i< edrlist.size();i++){
              etot+=edrlist[i].E;
-             if (!Chi(egamma, etot, edrlist[i].dr)) return false;
+             if (!Chi(egammat, etot, edrlist[i].dr)) return false;
            }
         }
     return true;
@@ -156,16 +156,16 @@ namespace SELAN{
                   leadingphoton = particle;
                 }
             }
-          //get vector of all leptons, which come not from hadron decays
+          /*Get vector of all leptons, which come not from hadron decays .
+           All particles which are not such a lepton are added to the partonen vector which is used for the smooth isolation cut.
+          The selected photon itself gets subtracted in the chi function.  */
           if(particle->Flav().IsLepton() && particle->Flav().Charge()!=0 &&
                                             particle->ProductionBlob()->Type()==ATOOLS::btp::QED_Radiation){
               leptonen.push_back(particle);
             }
+          else partonen.push_back(particle);
 
-          //get vector of partonen or hadrons
-          if(particle->Flav().IsQuark() || particle->Flav().IsGluon() || particle->Flav().IsHadron()){
-              partonen.push_back(particle);
-            }
+
         }
        msg_Debugging() <<  METHOD << "()" <<  "   NEW EVENT   \n" << 
                    "leading photon:  "  <<  *leadingphoton  << "\n" <<
