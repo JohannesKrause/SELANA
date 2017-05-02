@@ -137,7 +137,7 @@ namespace SELAN{
                                             particle->ProductionBlob()->Type()==ATOOLS::btp::QED_Radiation){
               leptonen.push_back(particle);
             }
-          else partonen.push_back(particle);
+          partonen.push_back(particle); //iso cut with all particles
 
 
         }
