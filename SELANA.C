@@ -10,22 +10,6 @@
 
 namespace SELAN{
 
-
-  class edr {
-  public:
-    double E;
-    double dr;
-    edr(double _e,double _dr) : E(_e), dr(_dr) {}
-  };
-  class Order_edr {
-  public:
-    int operator()(const edr a, const edr b);
-  };
-  int Order_edr::operator()(const edr a, const edr b) {
-    if (a.dr<b.dr) return 1;
-    return 0;
-  }
-
   class SELANA: public SHERPA::Analysis_Interface {
 
   protected:
@@ -56,31 +40,21 @@ namespace SELAN{
       return (photon.Momentum().PPerp() > m_pt);
     }
 
-    bool Chi(const double & egammat, const double & etot, const double &dr){
-      double e_chi = egammat*m_eps*std::pow((1.-std::cos(dr))/(1.-std::cos(m_dr)),m_n);
-      if (etot-egammat > e_chi) return false;
-    return true;
-    }
 
     bool IsoCut(const ATOOLS::Particle &photon, const ATOOLS::Particle_Vector &partonen){
-      /*ME condition: etot < e_chi for every radius in the cone */
-      const double egammat = photon.Momentum().PPerp();
-      std::vector<edr> edrlist;
-      for (size_t i=0; i<partonen.size(); i++) {
+      //ME condition: etot < 0.5*Egamma
+       double etot =0;
+       const double egamma = photon.E();
+       for (size_t i=0; i<partonen.size(); i++) {
           ATOOLS::Particle *parton(partonen.at(i));
           double dr =  photon.Momentum().DR(parton->Momentum());
-          if (dr<m_dr) edrlist.push_back(edr(parton->Momentum().PPerp(), dr));
+          if (dr<m_dr) etot+=parton->E();
       }
-      if (!edrlist.empty()){
-         std::stable_sort(edrlist.begin(), edrlist.end(), Order_edr());
-         double etot=0;
-         for (size_t i=0; i< edrlist.size();i++){
-             etot+=edrlist[i].E;
-             if (!Chi(egammat, etot, edrlist[i].dr)) return false;
-           }
-        }
-    return true;
+      if ((etot-egamma)<m_eps*egamma) return true;
+      return false;
     }
+
+
 
 
   public:
