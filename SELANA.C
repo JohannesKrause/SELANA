@@ -32,7 +32,7 @@ namespace SELAN{
 
   private:
     bool m_direct, m_check_cuts;
-    double m_dr_gamma_lep, m_pt_gamma, m_eps, m_n, m_dr;
+    double m_dr_gamma_lep, m_pt_gamma, m_pt_lepton, m_eps, m_n, m_dr;
     std::string m_inpath;
     std::string m_infile;
     std::string m_outpath;
@@ -116,6 +116,7 @@ namespace SELAN{
       reader.SetInputFile(infile+"|BEGIN_SELANA|END_SELANA");
       reader.SetComment("#");
       m_pt_gamma = reader.GetValue<double>("PT_GAMMA", 10);
+      m_pt_lepton = reader.GetValue<double>("PT_LEPTON", 10);
       m_dr_gamma_lep = reader.GetValue<double>("DELTAR_GAMMA_LEPTON", 0.2);
       m_eps = reader.GetValue<double>("ISO_EPSILON", 0.1);
       m_dr = reader.GetValue<double>("ISO_DELTAR", 0.4);
@@ -160,7 +161,7 @@ namespace SELAN{
            All particles which are not such a lepton are added to the partonen vector which is used for the smooth isolation cut.
           The selected photon itself gets subtracted in the chi function.  */
           if(particle->Flav().IsLepton() && particle->Flav().Charge()!=0 &&
-                                            particle->ProductionBlob()->Type()==ATOOLS::btp::QED_Radiation){
+                                            particle->Momentum().PPerp()>m_pt_lepton){
               leptonen.push_back(particle);
             }
           else partonen.push_back(particle);
@@ -168,11 +169,11 @@ namespace SELAN{
 
         }
        msg_Debugging() <<  METHOD << "()" <<  "   NEW EVENT   \n" << 
-                   "leading photon:  "  <<  *leadingphoton  << "\n" <<
-                   "lepton1: "   << *leptonen[0] << "\n" <<
-                   "lepton2: "   << *leptonen[1] << "\n" <<  std::endl;
-        
-       
+                   "leading photon:  "  <<  *leadingphoton  << "\n" << std::endl;
+       for (ATOOLS::Particle_Vector::const_iterator it=leptonen.begin(); it!=leptonen.end(); it++){
+               msg_Debugging() << "lepton: " << **it << std::endl;
+       }
+
       if (leadingphoton){
           bool lep_cut = LeptonCut(*leadingphoton, leptonen);
           bool gamma_cut = PhotonPtCut(*leadingphoton);
