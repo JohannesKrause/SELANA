@@ -32,7 +32,7 @@ namespace SELAN{
 
   private:
     bool m_direct, m_check_cuts;
-    double m_dr_gamma_lep, m_pt, m_eps, m_n, m_dr;
+    double m_dr_gamma_lep, m_pt_gamma, m_eps, m_n, m_dr;
     std::string m_inpath;
     std::string m_infile;
     std::string m_outpath;
@@ -52,8 +52,8 @@ namespace SELAN{
     }
 
     bool PhotonPtCut(const ATOOLS::Particle &photon){
-      /*ME condition: pT(gamma) > m_pt*/
-      return (photon.Momentum().PPerp() > m_pt);
+      /*ME condition: pT(gamma) > m_pt_gamma*/
+      return (photon.Momentum().PPerp() > m_pt_gamma);
     }
 
     bool Chi(const double & egammat, const double & etot, const double &dr){
@@ -115,7 +115,7 @@ namespace SELAN{
         infile=infile.substr(0,infile.find('|'));
       reader.SetInputFile(infile+"|BEGIN_SELANA|END_SELANA");
       reader.SetComment("#");
-      m_pt = reader.GetValue<double>("PT_GAMMA", 10);
+      m_pt_gamma = reader.GetValue<double>("PT_GAMMA", 10);
       m_dr_gamma_lep = reader.GetValue<double>("DELTAR_GAMMA_LEPTON", 0.2);
       m_eps = reader.GetValue<double>("ISO_EPSILON", 0.1);
       m_dr = reader.GetValue<double>("ISO_DELTAR", 0.4);
@@ -124,7 +124,7 @@ namespace SELAN{
 
       msg_Debugging()<<METHOD<<"(): { setting cut variables \n" <<
                        "dr(gamma, lepton)= " << m_dr_gamma_lep <<
-                       " pT(gamma) = " << m_pt <<
+                       " pT(gamma) = " << m_pt_gamma <<
                        " (dr, eps, n) = (" << m_dr << ", " << m_eps
                     << ", " << m_n <<
                        " ) \n }" << std::endl;
