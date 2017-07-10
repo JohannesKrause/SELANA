@@ -46,7 +46,7 @@ namespace SELAN{
     bool LeptonCut(const ATOOLS::Particle & photon, const ATOOLS::Particle_Vector & leptonen){
       /*ME condition: all leptons have to be separated from the hardest photon by m_dr_gamma_lep*/
       for(ATOOLS::Particle_Vector::const_iterator it=leptonen.begin(); it!=leptonen.end(); it++){
-           if( photon.Momentum().DR((*it)->Momentum()) < m_dr_gamma_lep) return false;
+          if( photon.Momentum().DR((*it)->Momentum()) < m_dr_gamma_lep) return false;
         }
       return true;
     }
@@ -59,7 +59,7 @@ namespace SELAN{
     bool Chi(const double & egammat, const double & etot, const double &dr){
       double e_chi = egammat*m_eps*std::pow((1.-std::cos(dr))/(1.-std::cos(m_dr)),m_n);
       if (etot-egammat > e_chi) return false;
-    return true;
+      return true;
     }
 
     bool IsoCut(const ATOOLS::Particle &photon, const ATOOLS::Particle_Vector &partonen){
@@ -70,16 +70,16 @@ namespace SELAN{
           ATOOLS::Particle *parton(partonen.at(i));
           double dr =  photon.Momentum().DR(parton->Momentum());
           if (dr<m_dr) edrlist.push_back(edr(parton->Momentum().PPerp(), dr));
-      }
-      if (!edrlist.empty()){
-         std::stable_sort(edrlist.begin(), edrlist.end(), Order_edr());
-         double etot=0;
-         for (size_t i=0; i< edrlist.size();i++){
-             etot+=edrlist[i].E;
-             if (!Chi(egammat, etot, edrlist[i].dr)) return false;
-           }
         }
-    return true;
+      if (!edrlist.empty()){
+          std::stable_sort(edrlist.begin(), edrlist.end(), Order_edr());
+          double etot=0;
+          for (size_t i=0; i< edrlist.size();i++){
+              etot+=edrlist[i].E;
+              if (!Chi(egammat, etot, edrlist[i].dr)) return false;
+            }
+        }
+      return true;
     }
 
 
@@ -143,36 +143,41 @@ namespace SELAN{
         }
       v_particles.clear();
       //identify all relevant particles which are active
-      ATOOLS::Particle_List particles(bl->ExtractParticles(1));
       ATOOLS::Particle_Vector leptonen, partonen;
       ATOOLS::Particle *leadingphoton;
       double gpt=0;
-      for (ATOOLS::Particle_List::const_iterator it=particles.begin(); it!=particles.end(); it++){
-          //get photon with highest pT, which comes either from ME or from YFS, but not from hadrons
-          ATOOLS::Particle *particle=*it;
-          if (particle->Flav().IsPhoton() && particle->ProductionBlob()->Type()==ATOOLS::btp::QED_Radiation){
-              if (particle->Momentum().PPerp()>gpt){
-                  gpt = particle->Momentum().PPerp();
-                  leadingphoton = particle;
+      //loop over all final particles
+      for (ATOOLS::Blob_List::iterator blit=bl->begin();
+           blit!=bl->end();++blit) {
+          ATOOLS::Blob* blob=*blit;
+          for (int i=0;i<blob->NOutP();i++) {
+              ATOOLS::Particle *particle=blob->OutParticle(i);
+
+              if (particle->DecayBlob()!=NULL) continue;
+              //get photon with highest pT, which comes either from ME or from YFS, but not from hadrons
+              if (particle->Flav().IsPhoton() && particle->ProductionBlob()->Type()==ATOOLS::btp::QED_Radiation){
+                  if (particle->Momentum().PPerp()>gpt){
+                      gpt = particle->Momentum().PPerp();
+                      leadingphoton = particle;
+                    }
                 }
-            }
-          /*Get vector of all leptons, which come not from hadron decays .
+              /*Get vector of all leptons, which come not from hadron decays .
            All particles which are not such a lepton are added to the partonen vector which is used for the smooth isolation cut.
           The selected photon itself gets subtracted in the chi function.  */
-          if(particle->Flav().IsLepton() && particle->Flav().Charge()!=0 &&
-                                            particle->ProductionBlob()->Type()==ATOOLS::btp::QED_Radiation){
-              leptonen.push_back(particle);
+              if(particle->Flav().IsLepton() && particle->Flav().Charge()!=0 &&
+                 particle->ProductionBlob()->Type()==ATOOLS::btp::QED_Radiation){
+                  leptonen.push_back(particle);
+                }
+              else partonen.push_back(particle);
+
             }
-          else partonen.push_back(particle);
-
-
         }
-       msg_Debugging() <<  METHOD << "()" <<  "   NEW EVENT   \n" << 
-                   "leading photon:  "  <<  *leadingphoton  << "\n" <<
-                   "lepton1: "   << *leptonen[0] << "\n" <<
-                   "lepton2: "   << *leptonen[1] << "\n" <<  std::endl;
-        
-       
+      msg_Debugging() <<  METHOD << "()" <<  "   NEW EVENT   \n" <<
+                          "leading photon:  "  <<  *leadingphoton  << "\n" <<
+                          "lepton1: "   << *leptonen[0] << "\n" <<
+                          "lepton2: "   << *leptonen[1] << "\n" <<  std::endl;
+
+
       if (leadingphoton){
           bool lep_cut = LeptonCut(*leadingphoton, leptonen);
           bool gamma_cut = PhotonPtCut(*leadingphoton);
